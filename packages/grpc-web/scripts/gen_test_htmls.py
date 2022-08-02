@@ -49,7 +49,7 @@ def _gen_test_html(js_file_path: str, template: Template):
     while test_file_name.startswith('../'):
         test_file_name = test_file_name[3:]
     test_file_name = test_file_name.replace('/', '__')
-    test_file_name = os.path.splitext(test_file_name)[0] + '.html'
+    test_file_name = f'{os.path.splitext(test_file_name)[0]}.html'
 
     # Generates the test HTML using the package name of the test file
     package_name = _extract_closure_package(js_file_path)
@@ -69,7 +69,7 @@ def _extract_closure_package(js_file_path) -> str:
     if matches is None:
         raise ValueError("goog.provide() or goog.module() not found in file")
 
-    return matches.group(2)
+    return matches[2]
 
 
 if __name__ == "__main__":

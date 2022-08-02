@@ -100,7 +100,7 @@ class ProcessChangelog:
         if not url.startswith('http'):
             url = API_BASE_URL + url
         req = Request(url)
-        req.add_header('Authorization', 'token {}'.format(self.token))
+        req.add_header('Authorization', f'token {self.token}')
         f = urlopen(req)
         response = json.loads(f.read().decode('utf-8'))
         return response, f.info()
@@ -140,11 +140,14 @@ class ProcessChangelog:
                 '/git/ref/tags/' + release['tag_name'])
             tag_data, _ = self.github_api(
                 '/git/commits/' + ref_data['object']['sha'])
-            self.releases.append({
-                'release': release['tag_name'],
-                'date': tag_data['author']['date'],
-                'sha': ref_data['object']['sha'][0:7]
-            })
+            self.releases.append(
+                {
+                    'release': release['tag_name'],
+                    'date': tag_data['author']['date'],
+                    'sha': ref_data['object']['sha'][:7],
+                }
+            )
+
         self.releases.sort(key=lambda val:val['date'])
 
     # Retrieve the list of all merged PRs
@@ -158,12 +161,11 @@ class ProcessChangelog:
                 if pr['merged_at'] is None: # not merged
                     continue
                 label_level = self._get_pr_label_level(pr['labels'])
-                m = re.search(r'author: ?@([A-Za-z\d-]+)', pr['body'])
-                if m:
+                if m := re.search(r'author: ?@([A-Za-z\d-]+)', pr['body']):
                     author = m[1] # author attribution override
                 else:
                     author = pr['user']['login']
-                sha = pr['merge_commit_sha'][0:7]
+                sha = pr['merge_commit_sha'][:7]
                 release = self.check_release(sha)
                 self.merged_prs.append({
                     'number': str(pr['number']),
@@ -190,18 +192,11 @@ class ProcessChangelog:
         for pr in self.merged_prs:
             release = pr['release']
             author = pr['author']
-            num = '[#{}](https://github.com/grpc/grpc-web/pull/{})'.format(
-                pr['number'], pr['number'])
-            if len(pr['title']) > 70:
-                title = pr['title'][0:70] + "..."
-            else:
-                title = pr['title']
-            if author not in GRPC_WEB_TEAM:
-                credit = f" @{author}"
-            else:
-                credit = ""
+            num = f"[#{pr['number']}](https://github.com/grpc/grpc-web/pull/{pr['number']})"
 
-            final_formatted_line = "- {} {}{}".format(num, title, credit)
+            title = pr['title'][:70] + "..." if len(pr['title']) > 70 else pr['title']
+            credit = f" @{author}" if author not in GRPC_WEB_TEAM else ""
+            final_formatted_line = f"- {num} {title}{credit}"
 
             release_notes = self.changelog_by_release[release]
             if pr['label_level'] == LabelLevel.BREAKING_CHANGE:
@@ -222,7 +217,7 @@ class ProcessChangelog:
                 continue
             print_other_changes_heading = False
             print("")
-            print("## {}".format(release))
+            print(f"## {release}")
             if release_notes.breaking_changes:
                 print_other_changes_heading = True
                 print("")

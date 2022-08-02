@@ -38,10 +38,13 @@ def main():
     template_data = common.read_file(ALL_TESTS_TEMPLATE_FILE)
     template = Template(template_data)
 
-    test_html_paths = []
-    for file_name in common.get_files_with_suffix(
-            common.GENERATED_TEST_BASE_PATH, '_test.html'):
-        test_html_paths.append("  '%s/%s'," % (GRPC_WEB_BASE_DIR, file_name))
+    test_html_paths = [
+        "  '%s/%s'," % (GRPC_WEB_BASE_DIR, file_name)
+        for file_name in common.get_files_with_suffix(
+            common.GENERATED_TEST_BASE_PATH, '_test.html'
+        )
+    ]
+
     # Example output paths:
     # 'packages/grpc-web/generated/test_htmls/javascript__net__grpc__web__grpcwebclientbase_test.html',
     # 'packages/grpc-web/generated/test_htmls/javascript__net__grpc__web__grpcwebstreamparser_test.html',
